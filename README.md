@@ -13,8 +13,7 @@
 
 <!-- Link to the repo owners' github profiles -->
 
-- [@10zinten](https://github.com/10zinten)
-- [@evanyerburgh](https://github.com/evanyerburgh)
+- [@ta4tsering](https://github.com/ta4tsering)
 
 ## Integrations
 
@@ -22,6 +21,19 @@
 
 None
 ## Docs
+
+### Installation
+
+`pip install -e .`
+
+
+### Usage
+#### OCR Single Book
+1. Put the images to be OCRed in its repective folder in the images directory as per its extensions
+2. To OCR the images of a single book run `python -m src.OCR_non_bdrc.OCR_books <images_dir_path> <type_of_images>`
+#### OCR Multiple Books
+1. To OCR images of multiple books, put the images in its respective folder in the images directory as per its extension.
+2. To OCR, run `python -m src.OCR_non_bdrc.OCR_books.OCR_multiple_books.py`
 
 <!-- Update the link to the docs -->
 

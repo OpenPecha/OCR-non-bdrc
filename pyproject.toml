@@ -3,18 +3,26 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "project_name"
+name = "ocr_non_bdrc"
 version = "0.0.1"
 authors = [
   { name="OpenPecha", email="dev@openpecha.org" },
 ]
-description = "A small example package"
+description = "A small package to help OCR non-bdrc"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+]
+
+dependencies = [
+  "pdf2images==0.0.3",
+  "google-cloud>=0.34.0, <1.0",
+  "google-cloud-vision>=3.4.3, <4.0",
+  "openpecha>=0.11.7, <1.0",
+
 ]
 
 [project.optional-dependencies]
