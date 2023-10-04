@@ -7,7 +7,7 @@
 
 <!-- Replace with 1-sentence description about what this tool is or does.-->
 
-<h3 align="center">Use this repo template for all new Python projects.</h3>
+<h3 align="center">This repo is a pipeline to OCR non-BDRC images.</h3>
 
 ## Project owner(s)
 
