@@ -1,4 +1,3 @@
-
 import os
 import io
 import json
@@ -6,20 +5,12 @@ import logging
 import gzip
 from pathlib import Path
 from PIL import Image
-
+import time
 from pdf2image import convert_from_path
 from google.cloud import vision
 from google.cloud.vision import AnnotateImageResponse
 
 vision_client = vision.ImageAnnotatorClient()
-
-
-def gzip_str(string_):
-    out = io.BytesIO()
-    with gzip.GzipFile(fileobj=out, mode="w") as fo:
-        fo.write(string_.encode())
-    bytes_obj = out.getvalue()
-    return bytes_obj
 
 
 def google_ocr(image, lang_hint=None):
@@ -48,10 +39,18 @@ def google_ocr(image, lang_hint=None):
     return response
 
 
+def gzip_str(string_):
+    out = io.BytesIO()
+    with gzip.GzipFile(fileobj=out, mode="w") as fo:
+        fo.write(string_.encode())
+    bytes_obj = out.getvalue()
+    return bytes_obj
+
+
 def apply_ocr_on_folder(images_dir, OCR_dir, lang=None):
     if not images_dir.is_dir():
         return
-    for img_fn in images_dir.iterdir():
+    for img_fn in list(images_dir.iterdir()):
         result_fn = OCR_dir / f"{img_fn.stem}.json.gz"
         if result_fn.is_file():
             continue
@@ -63,9 +62,27 @@ def apply_ocr_on_folder(images_dir, OCR_dir, lang=None):
         result = json.dumps(result)
         gzip_result = gzip_str(result)
         result_fn.write_bytes(gzip_result)
+   
 
+def pdf_to_images(pdf_path, images_path):
+    pages = convert_from_path(pdf_path)
+    for i, page in enumerate(pages, 1):
+        page.save(os.path.join(images_path, f"image_{i:06}.jpg"), "JPEG")
+
+
+def ocr_pdf(pdf_path):
+    images_path = Path(f"./data/images/jpeg/{pdf_path.stem}/")
+    OCR_output_path = Path(f"./data/OCR/{pdf_path.stem}/")
+    images_path.mkdir(parents=True, exist_ok=True)
+    OCR_output_path.mkdir(parents=True, exist_ok=True)
+    pdf_to_images(pdf_path, images_path)
+    apply_ocr_on_folder(
+            images_dir = images_path,
+            OCR_dir = OCR_output_path
+        )
     
-def ocr_jpeg_images(images_path):
+    
+def ocr_images(images_path):
     OCR_output_path = Path(f"./data/OCR/{images_path.stem}/")
     OCR_output_path.mkdir(parents=True, exist_ok=True)
     apply_ocr_on_folder(
@@ -92,60 +109,23 @@ def OCR_tiff_images(tiff_dir):
         except Exception as e:
             print(f"Error converting TIFF to JPEG: {e}")
     jpeg_path = Path(f"./data/images/jpeg/{title}")
-    ocr_jpeg_images(jpeg_path)
+    ocr_images(jpeg_path)
 
 
-def pdf_to_images(pdf_path, images_path):
-    pages = convert_from_path(pdf_path)
-    for i, page in enumerate(pages, 1):
-        page.save(os.path.join(images_path, f"image_{i:06}.jpg"), "JPEG")
-
-
-def ocr_pdf(pdf_path):
-    images_path = Path(f"./data/images/jpeg/{pdf_path.stem}/")
-    OCR_output_path = Path(f"./data/OCR/{pdf_path.stem}/")
-    images_path.mkdir(parents=True, exist_ok=True)
-    OCR_output_path.mkdir(parents=True, exist_ok=True)
-    pdf_to_images(pdf_path, images_path)
-    apply_ocr_on_folder(
-            images_dir = images_path,
-            OCR_dir = OCR_output_path
-        )
-
-
-def OCR_multiple_books():
-    pdf_paths = sorted(Path(f"./data/pdf/").iterdir())
-    for pdf_path in pdf_paths:
-        ocr_pdf(pdf_path)
-    images_paths = sorted(Path(f"./data/images/jpeg").iterdir())
-    for images_path in images_paths:
-        ocr_jpeg_images(Path(f"./data/images/images_tengyur_pecing"))
-    tiff_dirs = list(Path(F"./data/images/tiff/").iterdir())
-    for tiff_dir in tiff_dirs:
-        OCR_tiff_images(tiff_dir)
-
-
-def OCR_book(images_dir_path, image_type):
-    if image_type == "pdf":
-        ocr_pdf(images_dir_path)
-    elif image_type == "tiff":
-        OCR_tiff_images(images_dir_path)
-    elif image_type == "jpeg":
-        ocr_jpeg_images(images_dir_path)
+def main(type):
+    if type == "pdf":
+        pdf_paths = sorted(Path(f"./data/pdf/").iterdir())
+        for pdf_path in pdf_paths:
+            ocr_pdf(pdf_path)
+    elif type == "tiff":
+        tiff_dirs = list(Path(F"./data/images/tiff/").iterdir())
+        for tiff_dir in tiff_dirs:
+            OCR_tiff_images(tiff_dir)
+    elif type == "jpeg":
+        images_paths = sorted(Path(f"./data/images/jpeg/").iterdir())
+        for images_path in images_paths:
+            ocr_images(images_path)
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="OCR images")
-    parser.add_argument(
-        'images_dir_path', 
-        type=str, 
-        help='Path to the images directory'
-        )
-    parser.add_argument(
-        'image_type', 
-        type=str,
-        help='Type of images')
-    args = parser.parse_args()
-    OCR_book(args.images_dir_path, args.image_type)
+    main()

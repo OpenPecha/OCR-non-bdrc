@@ -40,7 +40,7 @@ def create_repo(text, repo_name, title):
     repo = g.get_repo(f'MonlamAI/{repo_name}')
     repo.create_file(f'{title}.txt', 'Initial commit', text)
     add_description(repo_name, title)
-    logging.info(f"Created repo {repo_name} for {title}")
+    print(f"Created repo {repo_name} for {title}")
 
 def get_text_from_OCR(OCR_path):
     final_text = {}
@@ -77,8 +77,6 @@ def create_repos_for_books():
             else:
                 print(f"{repo_name} does not exist")
 
-
-
 def update_text(repo_name, file_path, new_content):
     commit_msg = f"Updated text file"
     g = Github(ACCESS_TOKEN)
@@ -95,12 +93,18 @@ def create_text_from_OCR(title):
     for _, info in text_dict.items():
         if info['text'] is not None:
             text += info['text']
-    Path(f"./{title}.txt").write_text(text)
+    Path(f"./data/{title}.txt").write_text(text, encoding='utf-8')
 
+
+def main(create_repo=False):
+    if create_repo:
+        create_repos_for_books()
+    else:
+        ocr_paths = list(Path(f"./data/OCR").iterdir())
+        for ocr_path in ocr_paths:
+            title = ocr_path.stem
+            create_text_from_OCR(title)
+    
+    
 if __name__ == "__main__":
-    ocr_paths = list(Path(f"./data/OCR").iterdir())
-    for ocr_path in ocr_paths:
-        title = ocr_path.stem
-        create_text_from_OCR(title)
-    # create_repos_for_books()
-
+    main()
