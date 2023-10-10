@@ -5,13 +5,13 @@ import requests
 import logging
 from github import Github
 from pathlib import Path
-from get_text import get_text
+from OCR_non_bdrc.get_text import get_text
 
 
 ACCESS_TOKEN = os.environ.get('GITHUB_TOKEN')
 
 logging.basicConfig(
-    filename="./log/ocr_non-bdrc.log",
+    filename="./ocr_non-bdrc.log",
     format="%(levelname)s: %(message)s",
     level=logging.INFO,
 )
