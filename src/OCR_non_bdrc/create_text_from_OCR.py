@@ -10,11 +10,6 @@ from OCR_non_bdrc.get_text import get_text
 
 ACCESS_TOKEN = os.environ.get('GITHUB_TOKEN')
 
-logging.basicConfig(
-    filename="./ocr_non-bdrc.log",
-    format="%(levelname)s: %(message)s",
-    level=logging.INFO,
-)
 
 def add_description(repo_name, description):
     GITHUB_API_ENDPOINT = f"https://api.github.com/repos/MonlamAI/{repo_name}"
@@ -87,24 +82,21 @@ def update_text(repo_name, file_path, new_content):
     except Exception as e:
         print( f'Pecha id :{repo_name} not updated with error {e}')
 
-def create_text_from_OCR(title):
+def create_text_from_OCR(ocr_path):
     text = ""
-    text_dict = get_text_from_OCR(Path(f"./data/OCR/{title}"))
+    text_dict = get_text_from_OCR(ocr_path)
     for _, info in text_dict.items():
         if info['text'] is not None:
             text += info['text']
-    Path(f"./data/{title}.txt").write_text(text, encoding='utf-8')
+    return text
 
-
-def main(create_repo=False):
-    if create_repo:
+if __name__ == "__main__":
+    make_repo = False
+    if make_repo:
         create_repos_for_books()
     else:
-        ocr_paths = list(Path(f"./data/OCR").iterdir())
-        for ocr_path in ocr_paths:
+        ocr_dir_paths = list(Path(f"./data/OCR").iterdir())
+        for ocr_path in ocr_dir_paths:
             title = ocr_path.stem
-            create_text_from_OCR(title)
-    
-    
-if __name__ == "__main__":
-    main()
+            text = create_text_from_OCR(ocr_path)
+            Path(f"./data/{title}.txt").write_text(text, encoding='utf-8')

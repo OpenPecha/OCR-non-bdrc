@@ -91,10 +91,3 @@ def get_text(ocr_object):
         return
     text = build_page(bboxes, avg_width)
     return text
-
-
-if __name__ == "__main__":
-    text = ""
-    file_path = Path(f"./data/OCR/ཐེག་པར་དཀའ་བའི་ཚེ་སྲོག་གི་ཡང་བ།/20220804081821028_0255_2R.json.gz")
-    ocr_object = json.load(gzip.open(str(file_path), "rb"))
-    text = get_text(ocr_object, text)
