@@ -6,9 +6,10 @@ import gzip
 from pathlib import Path
 from PIL import Image
 import time
-from pdf2image import convert_from_path
+from pdf2image import convert_from_path, pdfinfo_from_path
 from google.cloud import vision
 from google.cloud.vision import AnnotateImageResponse
+from tqdm import tqdm
 
 vision_client = vision.ImageAnnotatorClient()
 
@@ -50,7 +51,8 @@ def gzip_str(string_):
 def apply_ocr_on_folder(images_dir, OCR_dir, lang=None):
     if not images_dir.is_dir():
         return
-    for img_fn in list(images_dir.iterdir()):
+    img_files = sorted(images_dir.iterdir())
+    for img_fn in tqdm(img_files, desc="OCR pages", unit="page"):
         result_fn = OCR_dir / f"{img_fn.stem}.json.gz"
         if result_fn.is_file():
             continue
@@ -64,10 +66,19 @@ def apply_ocr_on_folder(images_dir, OCR_dir, lang=None):
         result_fn.write_bytes(gzip_result)
    
 
-def pdf_to_images(pdf_path, images_path):
-    pages = convert_from_path(pdf_path)
-    for i, page in enumerate(pages, 1):
-        page.save(os.path.join(images_path, f"image_{i:06}.jpg"), "JPEG")
+def pdf_to_images(pdf_path, images_path, batch_size: int = 5):
+    """Convert PDF pages to JPEG images in batches to avoid OOM on large PDFs."""
+    info = pdfinfo_from_path(pdf_path)
+    total_pages = info["Pages"]
+    with tqdm(total=total_pages, desc="PDF → JPEG", unit="page") as pbar:
+        for start in range(1, total_pages + 1, batch_size):
+            end = min(start + batch_size - 1, total_pages)
+            pages = convert_from_path(pdf_path, first_page=start, last_page=end)
+            for offset, page in enumerate(pages):
+                page_num = start + offset
+                page.save(os.path.join(images_path, f"image_{page_num:06}.jpg"), "JPEG")
+                page.close()
+                pbar.update(1)
 
 
 def ocr_pdf(pdf_path):

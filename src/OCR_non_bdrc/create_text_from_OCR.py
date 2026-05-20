@@ -5,6 +5,7 @@ import requests
 import logging
 from github import Github
 from pathlib import Path
+from tqdm import tqdm
 from OCR_non_bdrc.get_text import get_text
 
 
@@ -40,7 +41,7 @@ def create_repo(text, repo_name, title):
 def get_text_from_OCR(OCR_path):
     final_text = {}
     file_paths = sorted(OCR_path.iterdir())
-    for num, file_path in enumerate(file_paths, 1):
+    for num, file_path in enumerate(tqdm(file_paths, desc="Extracting text", unit="page"), 1):
         ocr_object = json.load(gzip.open(str(file_path), "rb"))
         text = get_text(ocr_object)
         final_text[num]= {
